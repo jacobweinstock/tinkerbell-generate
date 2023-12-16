@@ -1,2 +1,2 @@
 # tinkerbell-generate
-Generate Tinkerbell customer resource objects from a csv input
+Generate Tinkerbell custom resource objects from a csv input
