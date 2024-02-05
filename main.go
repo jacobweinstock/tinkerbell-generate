@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/gocarina/gocsv"
-	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 )
 
@@ -48,7 +47,6 @@ type config struct {
 	outputLocation  string
 	namespace       string
 	sshPublicKey    string
-
 }
 
 func main() {
@@ -85,10 +83,8 @@ func main() {
 		if record.Namespace == "" {
 			record.Namespace = cfg.namespace
 		}
-		if record.SSHPublicKey == "" {
-			if pk, err := readSSHPubKey(cfg.sshPublicKey); err != nil {
-				record.SSHPublicKey = pk
-			} else {
+		if record.SSHPublicKey == "" && cfg.sshPublicKey != "" {
+			if err := record.SSHPublicKey.UnmarshalCSV(cfg.sshPublicKey); err != nil {
 				log.Fatal(err)
 			}
 		}
@@ -99,19 +95,6 @@ func main() {
 			}
 		}
 	}
-}
-
-func readSSHPubKey(pathToFile string) (sshPublicKey, error) {
-	p, err := homedir.Expand(pathToFile)
-	if err != nil {
-		return "", err
-	}
-	b, err := os.ReadFile(p)
-	if err != nil {
-		return "", err
-	}
-
-	return sshPublicKey(b), nil
 }
 
 func createYamls(dh, db, dw bool, r record) ymls {

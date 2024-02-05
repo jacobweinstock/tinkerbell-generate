@@ -34,7 +34,7 @@ func (s *sshPublicKey) String() string {
 	return string(*s)
 }
 
-// Convert the CSV string as internal date
+// Convert the SSH Public Key file location to a string
 func (s *sshPublicKey) UnmarshalCSV(csv string) (err error) {
 	if csv == "" {
 		return nil
