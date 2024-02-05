@@ -1,0 +1,40 @@
+before:
+  hooks:
+    - go mod download
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+dockers:
+- image_templates:
+  - "ghcr.io/jacobweinstock/{{ .ProjectName }}:{{ .Version }}-amd64"
+  use: buildx
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--pull"
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - "--platform=linux/amd64"
+docker_manifests:
+- name_template: "ghcr.io/jacobweinstock/{{ .ProjectName }}:{{ .Version }}"
+  image_templates:
+  - "ghcr.io/jacobweinstock/{{ .ProjectName }}:{{ .Version }}-amd64"
+- name_template: "ghcr.io/jacobweinstock/{{ .ProjectName }}:latest"
+  image_templates:
+  - "ghcr.io/jacobweinstock/{{ .ProjectName }}:{{ .Version }}-amd64"

@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+
+hardware.csv
+hardware.tar.gz
+output
+dist/
