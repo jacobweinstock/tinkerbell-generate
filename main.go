@@ -37,6 +37,7 @@ type record struct {
 	Netmask      string       `csv:"netmask,omitempty"`
 	SSHPublicKey sshPublicKey `csv:"ssh_pub_key,omitempty"`
 	Vendor       string       `csv:"vendor,omitempty"`
+	Template     string       `csv:"template,omitempty"`
 }
 
 type config struct {
@@ -47,6 +48,7 @@ type config struct {
 	outputLocation  string
 	namespace       string
 	sshPublicKey    string
+	template        string
 }
 
 func main() {
@@ -55,10 +57,11 @@ func main() {
 	fs.StringVar(&cfg.csvPath, "csv", "hardware.csv", "path to csv file")
 	fs.StringVar(&cfg.outputLocation, "location", "output", "location to write yaml files")
 	fs.BoolVar(&cfg.disableHardware, "disable-hardware", false, "disable generating hardware.yaml")
-	fs.BoolVar(&cfg.disableBMC, "disable-bmc", false, "disable generating bmc-machine.yaml, bmc-secret.yaml, bmc-job.yaml")
+	fs.BoolVar(&cfg.disableBMC, "disable-bmc", false, "disable generating bmc-machine.yaml, bmc-secret.yaml")
 	fs.BoolVar(&cfg.disableWorkflow, "disable-workflow", false, "disable generating workflow.yaml")
 	fs.StringVar(&cfg.namespace, "namespace", "tink-system", "namespace to use in the generated yaml files")
 	fs.StringVar(&cfg.sshPublicKey, "ssh-public-key", "", "path to ssh public key")
+	fs.StringVar(&cfg.template, "template", "cleanup-flow", "template to use in the generated yaml files")
 	fs.Parse(os.Args[1:])
 
 	f, err := os.Open(cfg.csvPath)
@@ -88,6 +91,7 @@ func main() {
 				log.Fatal(err)
 			}
 		}
+		record.Template = cfg.template
 		y := createYamls(cfg.disableHardware, cfg.disableBMC, cfg.disableWorkflow, record)
 		for _, yaml := range y {
 			if err := os.WriteFile(filepath.Join(loc, yaml.name), yaml.data, 0644); err != nil {
@@ -113,10 +117,6 @@ func createYamls(dh, db, dw bool, r record) ymls {
 		ymls = append(ymls, yml{
 			name: "bmc-secret.yaml",
 			data: marshal(r.bmcSecret()),
-		})
-		ymls = append(ymls, yml{
-			name: "bmc-job.yaml",
-			data: marshal(r.bmcJob()),
 		})
 	}
 	if !dw {

@@ -60,7 +60,7 @@ func (r record) hardware() v1alpha1.Hardware {
 			Interfaces: []v1alpha1.Interface{
 				{
 					Netboot: &v1alpha1.Netboot{
-						AllowPXE:      boolPtr(true),
+						AllowPXE:      boolPtr(false),
 						AllowWorkflow: boolPtr(true),
 					},
 					DHCP: &v1alpha1.DHCP{
@@ -81,7 +81,7 @@ func (r record) hardware() v1alpha1.Hardware {
 			},
 			Metadata: &v1alpha1.HardwareMetadata{
 				Instance: &v1alpha1.MetadataInstance{
-					AllowPxe:  true,
+					AllowPxe:  false,
 					AlwaysPxe: true,
 					Hostname:  r.Hostname,
 					ID:        r.Mac,
@@ -150,41 +150,6 @@ func (r record) bmcSecret() corev1.Secret {
 	}
 }
 
-func (r record) bmcJob() rufio.Job {
-	return rufio.Job{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "Job",
-			APIVersion: "bmc.tinkerbell.org/v1alpha1",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name:      fmt.Sprintf("netboot-%s", r.Hostname),
-			Namespace: r.Namespace,
-		},
-		Spec: rufio.JobSpec{
-			MachineRef: rufio.MachineRef{
-				Name:      fmt.Sprintf("bmc-%s", r.Hostname),
-				Namespace: r.Namespace,
-			},
-			Tasks: []rufio.Action{
-				{
-					PowerAction: rufio.PowerHardOff.Ptr(),
-				},
-				{
-					OneTimeBootDeviceAction: &rufio.OneTimeBootDeviceAction{
-						Devices: []rufio.BootDevice{
-							rufio.PXE,
-						},
-						EFIBoot: true,
-					},
-				},
-				{
-					PowerAction: rufio.PowerOn.Ptr(),
-				},
-			},
-		},
-	}
-}
-
 func (r record) workflow() v1alpha1.Workflow {
 	return v1alpha1.Workflow{
 		TypeMeta: v1.TypeMeta{
@@ -196,12 +161,15 @@ func (r record) workflow() v1alpha1.Workflow {
 			Namespace: r.Namespace,
 		},
 		Spec: v1alpha1.WorkflowSpec{
-			TemplateRef: "cleanup-flow",
+			TemplateRef: r.Template,
 			HardwareRef: r.Hostname,
 			HardwareMap: map[string]string{
 				"machine":       r.Mac,
-				"admin_agent":   "admin-node1",
 				"hardware_name": r.Hostname,
+			},
+			BootOptions: v1alpha1.BootOptions{
+				ToggleAllowNetboot: true,
+				OneTimeNetboot:     true,
 			},
 		},
 	}
