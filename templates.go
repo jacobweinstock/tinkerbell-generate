@@ -169,7 +169,7 @@ func (r record) workflow() v1alpha1.Workflow {
 			},
 			BootOptions: v1alpha1.BootOptions{
 				ToggleAllowNetboot: true,
-				OneTimeNetboot:     true,
+				BootMode:           "netboot",
 			},
 		},
 	}
